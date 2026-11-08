@@ -22,15 +22,39 @@ jobs:
           ref: feature/rc3.1-r23-web-r49
           fetch-depth: 1
 
-      - name: Reassemble and verify RC.3.1 source archive
+      - name: Diagnose and reassemble RC.3.1 source archive
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
           parts=(source/rc31-source.b64.part-*)
+          expected=(
+            114f895b06653f4c42e0d900826041b75a26224d85328e2dd63b841e1e96ad09
+            e977b4b7e1e9215f531533a43ebbd57456aa9d8373b8189300b98c88d50cfe7d
+            ca2c63cf1c9292d6088bb8edecd2a36d6b37f7fbca0678c078b0676f53fd666e
+            2f54a025fb958026f1c7b2144a218d0a616ffa7fbbe0dee79fa32a52230e966c
+            95a18af5ae333e184acfd2b3d74fa86cdb767ba79fc609f51596b5fdd24c6ea6
+            a1b350f96873c3e8b0893e6ae05bb3b491d2a906af7988f7bfe32655019dbac3
+            f547f47166c92fd6c0863f5b9c5c475f6b1c9cf7441a61e757e03bfebb05ab02
+            c5b9aed4a74a2633036c306aad1990a1cd7ee4fb96c3f31e0c7613348f955f55
+            b7f34ce12608bbd5f2c8adfa4f55ca454a28417dcb290139745c05c89bfb5508
+            4e66303343a122c5be400ef8fc7b4bccac115fe29b10517bd548d48f29e0b6d5
+            b87b2bb4f63d4bd5825e31ec431f6d54e62c866488cbf01c4bf929e40302017f
+            f93f666d77cbed07df07b1468095d49b1a8d8998ee0e6d010221307d68a6efad
+          )
           if [ "${#parts[@]}" -ne 12 ]; then
             echo "Expected 12 source shards; found ${#parts[@]}"
             exit 1
+          fi
+          bad=0
+          for i in "${!parts[@]}"; do
+            actual="$(sha256sum "${parts[$i]}" | cut -d' ' -f1)"
+            printf 'PART %02d expected=%s actual=%s\n' "$((i+1))" "${expected[$i]}" "$actual"
+            if [ "$actual" != "${expected[$i]}" ]; then bad=1; fi
+          done
+          if [ "$bad" -ne 0 ]; then
+            echo "One or more source shards differ from the prepared local source archive."
+            exit 21
           fi
           cat "${parts[@]}" > /tmp/rc31-source.b64
           base64 --decode /tmp/rc31-source.b64 > /tmp/rc31-source.zip
