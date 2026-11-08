@@ -3,7 +3,7 @@ name: Build RC.2 Push Dedup R2 APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, rc2-inspect-baseline ]
 
 permissions:
   contents: read
