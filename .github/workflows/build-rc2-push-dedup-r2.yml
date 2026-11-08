@@ -33,7 +33,7 @@ jobs:
           grep -q "versionCode 29" project/app/build.gradle
           grep -q "versionName 'RC.2'" project/app/build.gradle
 
-      - name: Inspect RC.2 native WebView configuration
+      - name: Inspect original RC.2 native WebView configuration (diagnostic)
         working-directory: project
         shell: bash
         run: |
