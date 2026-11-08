@@ -3,7 +3,7 @@ name: Build RC.2 Push Dedup R2 APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, rc2-inspect-baseline ]
 
 permissions:
   contents: read
@@ -32,6 +32,19 @@ jobs:
           test -f project/app/src/main/java/id/sch/smpn4dumai/esiswa/PushMessagingService.java
           grep -q "versionCode 29" project/app/build.gradle
           grep -q "versionName 'RC.2'" project/app/build.gradle
+
+      - name: Inspect RC.2 native WebView configuration
+        working-directory: project
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN=$(find app/src/main/java -name MainActivity.java | head -n 1)
+          echo "=== WEBVIEW CONFIGURATION ==="
+          grep -n -A65 -B8 "private void configureWebView" "$MAIN" || true
+          echo "=== SCROLLBAR REFERENCES ==="
+          grep -n -i -E "scrollbar|scrollBar|overScroll|scrollbars" "$MAIN" app/src/main/res/layout/*.xml || true
+          echo "=== WEBVIEW XML ==="
+          grep -R -n -A8 -B2 '<WebView' app/src/main/res/layout || true
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
